@@ -1,0 +1,60 @@
+---
+- hosts: rhel7group
+  user: ansadm
+  become: yes
+  become_method: sudo
+  tasks:
+  
+  - name: set timezone to Europe/Helsinki
+    timezone:
+      name: Europe/Helsinki
+  - name: changes in cron files
+    shell: sudo rm /etc/cron.deny
+    ignore_errors: yes
+  - name: remove at.deny file
+    shell: sudo rm /etc/at.deny 
+    ignore_errors: yes
+  - name: create cron.allow file
+    shell: sudo touch /etc/cron.allow 
+  - name: create at.allow file 
+    shell: sudo touch /etc/at.allow 
+  - name: change permission of cron.allow file
+    shell: sudo chmod og-rwx /etc/cron.allow
+  - name: change permission of at.allow file
+    shell: sudo chmod og-rwx /etc/at.allow
+  - name: change permission of cron.allow file
+    shell: sudo chown root:root /etc/cron.allow
+  - name: changes permission of at.allow file
+    shell: sudo chown root:root /etc/at.allow
+  - name: changes permission of grub file
+    shell: sudo chmod 600 /boot/grub2/grub.cfg
+  - name: update audit.rule file
+    shell: |
+     sudo bash -c 'cat >>/etc/audit/rules.d/audit.rules<<EOF
+     -e 2
+     -w /sbin/insmod -p x -k modules
+     -w /sbin/rmmod -p x -k modules
+     -w /sbin/modprobe -p x -k modules
+     -a always,exit arch=b64 -S init_module -S delete_module -k modules
+     -a always,exit -F arch=b64 -S mount -F auid>=1000 -F auid!=4294967295 -k mounts
+     -a always,exit -F arch=b32 -S mount -F auid>=1000 -F auid!=4294967295 -k mounts
+     -w /etc/sudoers -p wa -k scope
+     -w /etc/sudoers.d -p wa -k scope
+     -w /etc/sudoers -p wa -k privileged-actions
+     -w /etc/sudoers.d/ -p wa -k privileged-actions
+     EOF'
+  - name: update audit.rule file
+    shell: |
+     sudo bash -c 'cat >>/etc/audit/audit.rules<<EOF
+     -e 2
+     -w /sbin/insmod -p x -k modules
+     -w /sbin/rmmod -p x -k modules
+     -w /sbin/modprobe -p x -k modules
+     -a always,exit arch=b64 -S init_module -S delete_module -k modules
+     -a always,exit -F arch=b64 -S mount -F auid>=1000 -F auid!=4294967295 -k mounts
+     -a always,exit -F arch=b32 -S mount -F auid>=1000 -F auid!=4294967295 -k mounts
+     -w /etc/sudoers -p wa -k scope
+     -w /etc/sudoers.d -p wa -k scope
+     -w /etc/sudoers -p wa -k privileged-actions
+     -w /etc/sudoers.d/ -p wa -k privileged-actions
+     EOF'
